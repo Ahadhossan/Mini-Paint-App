@@ -1,163 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Drawing Canvas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Drawing Canvas with Text Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
     <style>
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-        font-family: 'Poppins', sans-serif;
-      }
-
-      #canvasContainer {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      }
-
-      canvas {
-        border: 2px solid #333;
-        border-radius: 8px;
-        background-color: white;
-        touch-action: none;
-      }
-
-      .toolbar {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 15px;
-      }
-
-      .toolbar button {
-        background-color: #4f46e5;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        font-weight: 600;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background 0.2s ease;
-      }
-
-      .toolbar button:hover {
-        background-color: #3730a3;
-      }
+        * {
+            box-sizing: border-box;
+        }
+        
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #canvasContainer {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 95%;
+            max-width: 800px;
+        }
+        
+        canvas {
+            border: 1.5px solid #ced6e0;
+            border-radius: 10px;
+            background-color: white;
+            width: 100%;
+            height: auto;
+            cursor: crosshair;
+        }
+        
+        .toolbar {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .toolbar button,
+        .toolbar select,
+        .toolbar input[type="color"] {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        
+        .toolbar button {
+            background-color: #1d4ed8;
+            color: white;
+        }
+        
+        .toolbar button:hover {
+            background-color: #1e40af;
+        }
+        
+        .toolbar select {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .toolbar input[type="color"] {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 10%;
+        }
+        
+        .toolbar input[type="color"]:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 600px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <div id="canvasContainer">
-      <canvas id="drawingCanvas" width="600" height="400"></canvas>
-      <div class="toolbar">
-        <button id="pencil" title="Draw with pencil">Pencil</button>
-        <button id="eraser" title="Erase drawings">Eraser</button>
-        <button id="reset" title="Clear the canvas">Reset</button>
-        <button id="save" title="Save drawing as JPEG">Save as JPEG</button>
-      </div>
+        <canvas id="drawingCanvas" width="700" height="400"></canvas>
+        <div class="toolbar">
+            <button id="pencil">✏️ Pencil</button>
+            <button id="eraser">🧽 Eraser</button>
+            <button id="reset">♻️ Reset</button>
+            <button id="save">💾 Save JPEG</button>
+
+            <select id="toolType">
+        <option value="pencil">✏️ Pencil</option>
+        <option value="pen" selected>🖊️ Pen</option>
+        <option value="marker">🖌️ Marker</option>
+      </select>
+
+            <select id="shapeType">
+        <option value="free">✍️ Free Draw</option>
+        <option value="line">📏 Line</option>
+        <option value="rectangle">⬛ Rectangle</option>
+        <option value="circle">⚪ Circle</option>
+      </select>
+
+            <select id="penType">
+        <option value="solid">Solid</option>
+        <option value="dashed">Dashed</option>
+      </select>
+
+            <select id="penSize">
+        <option value="12">Small</option>
+        <option value="20" selected>Medium</option>
+        <option value="36">Large</option>
+      </select>
+
+            <input type="color" id="penColor" value="#000000" />
+        </div>
     </div>
 
     <script>
-      const canvas = document.getElementById("drawingCanvas");
-      const ctx = canvas.getContext("2d");
-      const pencilBtn = document.getElementById("pencil");
-      const eraserBtn = document.getElementById("eraser");
-      const resetBtn = document.getElementById("reset");
-      const saveBtn = document.getElementById("save");
+        const canvas = document.getElementById("drawingCanvas");
+        const ctx = canvas.getContext("2d");
 
-      // Initial white background
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const pencilBtn = document.getElementById("pencil");
+        const eraserBtn = document.getElementById("eraser");
+        const resetBtn = document.getElementById("reset");
+        const saveBtn = document.getElementById("save");
 
-      let drawing = false;
-      let erasing = false;
+        const penType = document.getElementById("penType");
+        const penSize = document.getElementById("penSize");
+        const penColor = document.getElementById("penColor");
+        const toolType = document.getElementById("toolType");
+        const shapeType = document.getElementById("shapeType");
 
-      const getXY = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        return {
-          x: (e.clientX || e.touches[0].clientX) - rect.left,
-          y: (e.clientY || e.touches[0].clientY) - rect.top,
-        };
-      };
-
-      const startDrawing = (e) => {
-        drawing = true;
-        const { x, y } = getXY(e);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-      };
-
-      const draw = (e) => {
-        if (!drawing) return;
-        const { x, y } = getXY(e);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = erasing ? "#f0f0f0" : "#000";
-        ctx.lineWidth = erasing ? 20 : 2;
-        ctx.lineCap = "round";
-        ctx.stroke();
-      };
-
-      const stopDrawing = () => {
-        drawing = false;
-        ctx.closePath();
-      };
-
-      // Mouse events
-      canvas.addEventListener("mousedown", startDrawing);
-      canvas.addEventListener("mousemove", draw);
-      canvas.addEventListener("mouseup", stopDrawing);
-      canvas.addEventListener("mouseout", stopDrawing);
-
-      // Touch events
-      canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        startDrawing(e);
-      });
-
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        draw(e);
-      });
-
-      canvas.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        stopDrawing();
-      });
-
-      // Tool actions
-      pencilBtn.addEventListener("click", () => (erasing = false));
-      eraserBtn.addEventListener("click", () => (erasing = true));
-
-      resetBtn.addEventListener("click", () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-      });
 
-      saveBtn.addEventListener("click", () => {
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext("2d");
-        tempCtx.fillStyle = "white";
-        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tempCtx.drawImage(canvas, 0, 0);
-        const link = document.createElement("a");
-        link.download = "drawing.jpeg";
-        link.href = tempCanvas.toDataURL("image/jpeg");
-        link.click();
-      });
+        let drawing = false;
+        let erasing = false;
+        let startX = 0;
+        let startY = 0;
+        let savedImageData;
+
+        const getXY = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            } else {
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+        };
+
+        const startDrawing = (e) => {
+            const {
+                x,
+                y
+            } = getXY(e);
+
+            if (toolType.value === "text") {
+                const text = prompt("Enter your text:");
+                if (text) {
+                    ctx.font = `${penSize.value}px Inter`;
+                    ctx.fillStyle = penColor.value;
+                    ctx.fillText(text, x, y);
+                }
+                return;
+            }
+
+            drawing = true;
+            startX = x;
+            startY = y;
+
+            if (shapeType.value !== "free" && !erasing) {
+                savedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+        };
+
+        const draw = (e) => {
+            if (!drawing) return;
+            const {
+                x,
+                y
+            } = getXY(e);
+
+            if (shapeType.value === "free" || erasing) {
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = erasing ? "#ffffff" : penColor.value;
+                ctx.lineCap = "round";
+                ctx.setLineDash([]);
+
+                switch (toolType.value) {
+                    case "pencil":
+                        ctx.lineWidth = 2;
+                        ctx.globalAlpha = 0.4;
+                        break;
+                    case "pen":
+                        ctx.lineWidth = parseInt(penSize.value);
+                        ctx.globalAlpha = 1.0;
+                        break;
+                    case "marker":
+                        ctx.lineWidth = parseInt(penSize.value) + 5;
+                        ctx.globalAlpha = 0.6;
+                        break;
+                }
+
+                ctx.stroke();
+            } else {
+                ctx.putImageData(savedImageData, 0, 0);
+                ctx.strokeStyle = penColor.value;
+                ctx.setLineDash(penType.value === "dashed" ? [10, 10] : []);
+                ctx.lineWidth = parseInt(penSize.value);
+                ctx.globalAlpha = 1.0;
+                ctx.beginPath();
+
+                switch (shapeType.value) {
+                    case "line":
+                        ctx.moveTo(startX, startY);
+                        ctx.lineTo(x, y);
+                        break;
+                    case "rectangle":
+                        ctx.rect(startX, startY, x - startX, y - startY);
+                        break;
+                    case "circle":
+                        const radius = Math.sqrt((x - startX) ** 2 + (y - startY) ** 2);
+                        ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+                        break;
+                }
+
+                ctx.stroke();
+            }
+        };
+
+        const stopDrawing = () => {
+            drawing = false;
+            ctx.closePath();
+            ctx.globalAlpha = 1.0;
+        };
+
+        canvas.addEventListener("mousedown", startDrawing);
+        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mouseup", stopDrawing);
+        canvas.addEventListener("mouseout", stopDrawing);
+
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            startDrawing(e);
+        });
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            draw(e);
+        });
+        canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            stopDrawing();
+        });
+
+        pencilBtn.addEventListener("click", () => {
+            erasing = false;
+            toolType.value = "pencil";
+            shapeType.value = "free";
+        });
+
+        eraserBtn.addEventListener("click", () => {
+            erasing = true;
+            shapeType.value = "free";
+        });
+
+        resetBtn.addEventListener("click", () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        saveBtn.addEventListener("click", () => {
+            const tempCanvas = document.createElement("canvas");
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext("2d");
+            tempCtx.fillStyle = "white";
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement("a");
+            link.download = "drawing.jpeg";
+            link.href = tempCanvas.toDataURL("image/jpeg");
+            link.click();
+        });
     </script>
-  </body>
+</body>
+
 </html>
